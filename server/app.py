@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+#!/usr/bin/env python3
+
 from flask import Flask, make_response, jsonify
 from flask_migrate import Migrate
 
@@ -21,50 +23,38 @@ def index():
 @app.route('/bakeries')
 def bakeries():
     bakeries = Bakery.query.all()
-    bakery_list = []
+    bakeries_dict_list = []
     for bakery in bakeries:
-        bakery_dict = {
-            "id":bakery.id,
-            "name": bakery.name
-        }
-        bakery_list.append(bakery_dict)
-    return jsonify(bakery_list)
+        bakery_dict = bakery.to_dict()
+        bakeries_dict_list.append(bakery_dict)
+
+    response = make_response(bakeries_dict_list, 200)
+    return response
 
 @app.route('/bakeries/<int:id>')
 def bakery_by_id(id):
-    bakery = Bakery.query.get(id)
-    if bakery:
-        return jsonify(bakery.to_dict())
-    else:
-        return jsonify({'error': 'Bakery not found'}), 404
-
-
-  
+    bakery = Bakery.query.filter_by(id=id).first()
+    bakery_dict = bakery.to_dict()
+    response = make_response(bakery_dict, 200)
+    return response
 
 @app.route('/baked_goods/by_price')
 def baked_goods_by_price():
-    baked_goods = BakedGood.query.order_by(BakedGood.price.desc()).all()
-    baked_good_list = []
-    for baked_good in baked_goods:
-        baked_good_dict = {
-            "name": baked_good.name,
-            "price": baked_good.price,
-            "bakery_id": baked_good.bakery_id,
-        }
-        baked_good_list.append(baked_good_dict)
-    return jsonify(baked_good_list)
+    baked_goods_list = []
+    baked_goods_by_price = BakedGood.query.order_by(BakedGood.price.desc()).all()
+    for bakery in baked_goods_by_price:
+        bakery_dict = bakery.to_dict()
+        baked_goods_list.append(bakery_dict)
+    response = make_response(baked_goods_list, 200)
+    return response
+
 
 @app.route('/baked_goods/most_expensive')
 def most_expensive_baked_good():
-    most_expensive_good = BakedGood.query.order_by(BakedGood.price.desc()).first()
-    if most_expensive_good:
-        return jsonify({
-            "name": most_expensive_good.name,
-            "price": most_expensive_good.price,
-            "bakery_id": most_expensive_good.bakery_id,
-        })
-    else:
-        return jsonify({'error': 'No baked goods found'}), 404
+    most_expensive_baked_good = BakedGood.query.order_by(BakedGood.price.desc()).limit(1).first()
+    bakery_dict = most_expensive_baked_good.to_dict()
+    response = make_response(bakery_dict, 200)
+    return response
 
 if __name__ == '__main__':
     app.run(port=5555, debug=True)
